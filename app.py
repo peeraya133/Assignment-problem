@@ -1,6 +1,6 @@
 import streamlit as st
 
-# ================== เก็บข้อมูล ==================
+# ====== เก็บข้อมูล ======
 if "subjects" not in st.session_state:
     st.session_state.subjects = {}
 
@@ -10,10 +10,10 @@ if "homeworks" not in st.session_state:
 st.set_page_config(page_title="Study Planner", layout="centered")
 st.title("📚 Study Planner System")
 
-# ================== เมนู ==================
+# ====== เมนู ======
 menu = st.sidebar.selectbox(
-    "เลือกเมนู",
-    ["เพิ่มวิชา", "เพิ่มการบ้าน", "แก้ไขการบ้าน", "ลบวิชา", "ค้นหาวิชา", "แสดงทั้งหมด"]
+    "เมนู",
+    ["เพิ่มวิชา", "เพิ่มการบ้าน", "แก้ไขวิชา", "แก้ไขการบ้าน", "ลบวิชา", "ค้นหาวิชา", "แสดงทั้งหมด"]
 )
 
 # ================== เพิ่มวิชา ==================
@@ -37,7 +37,7 @@ if menu == "เพิ่มวิชา":
             st.session_state.homeworks[name] = []
             st.success("เพิ่มวิชาเรียบร้อย")
         else:
-            st.warning("กรุณากรอกชื่อวิชา")
+            st.warning("กรอกชื่อวิชา")
 
 # ================== เพิ่มการบ้าน ==================
 elif menu == "เพิ่มการบ้าน":
@@ -61,9 +61,48 @@ elif menu == "เพิ่มการบ้าน":
     else:
         st.warning("ยังไม่มีวิชา")
 
+# ================== แก้ไขวิชา ==================
+elif menu == "แก้ไขวิชา":
+    st.header("✏️ แก้ไขวิชา")
+
+    if st.session_state.subjects:
+        subject = st.selectbox("เลือกวิชา", list(st.session_state.subjects.keys()))
+        data = st.session_state.subjects[subject]
+
+        new_name = st.text_input("ชื่อวิชาใหม่", value=subject)
+        code = st.text_input("รหัสวิชา", value=data["code"])
+        teacher = st.text_input("อาจารย์", value=data["teacher"])
+        # เลือกวัน
+        day = st.selectbox("วันเรียน", ["จันทร์", "อังคาร", "พุธ", "พฤหัส", "ศุกร์", "เสาร์", "อาทิตย์"])
+        
+        # เลือกเวลาเริ่ม - สิ้นสุด
+        start_time = st.time_input("เวลาเริ่ม")
+        end_time = st.time_input("เวลาสิ้นสุด")
+        
+        # รวมเวลาเป็นช่วง
+        time = f"{start_time} - {end_time}"
+
+        if st.button("บันทึกการแก้ไข"):
+            # ถ้าเปลี่ยนชื่อวิชา ต้องย้าย key
+            if new_name != subject:
+                st.session_state.subjects[new_name] = st.session_state.subjects.pop(subject)
+                st.session_state.homeworks[new_name] = st.session_state.homeworks.pop(subject)
+                subject = new_name
+
+            st.session_state.subjects[subject] = {
+                "code": code,
+                "teacher": teacher,
+                "day": day,
+                "time": time
+            }
+
+            st.success("แก้ไขเรียบร้อย")
+    else:
+        st.warning("ยังไม่มีวิชา")
+
 # ================== แก้ไขการบ้าน ==================
 elif menu == "แก้ไขการบ้าน":
-    st.header("✏️ แก้ไขสถานะการบ้าน")
+    st.header("✔ อัปเดตการบ้าน")
 
     if st.session_state.subjects:
         subject = st.selectbox("เลือกวิชา", list(st.session_state.subjects.keys()))
@@ -72,9 +111,9 @@ elif menu == "แก้ไขการบ้าน":
         if hw_list:
             for i, hw in enumerate(hw_list):
                 col1, col2 = st.columns([3,1])
-                col1.write(f"{hw['task']} | {hw['due']}")
+                col1.write(f"{hw['task']} | {hw['due']} | {hw['status']}")
 
-                if col2.button("✔ เสร็จ", key=i):
+                if col2.button("เสร็จ", key=i):
                     hw["status"] = "เสร็จแล้ว"
                     st.success("อัปเดตแล้ว")
         else:
@@ -92,7 +131,7 @@ elif menu == "ลบวิชา":
         if st.button("ลบ"):
             del st.session_state.subjects[subject]
             del st.session_state.homeworks[subject]
-            st.success("ลบวิชาเรียบร้อย")
+            st.success("ลบเรียบร้อย")
     else:
         st.warning("ไม่มีข้อมูล")
 
