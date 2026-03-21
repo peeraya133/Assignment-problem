@@ -23,8 +23,15 @@ if menu == "เพิ่มวิชา":
     code = st.text_input("รหัสวิชา")
     name = st.text_input("ชื่อวิชา")
     teacher = st.text_input("อาจารย์")
-    day = st.text_input("วันเรียน")
-    time = st.text_input("เวลา")
+    # เลือกวัน
+    day = st.selectbox("วันเรียน", ["จันทร์", "อังคาร", "พุธ", "พฤหัส", "ศุกร์", "เสาร์", "อาทิตย์"])
+        
+    # เลือกเวลาเริ่ม - สิ้นสุด
+    start_time = st.time_input("เวลาเริ่ม")
+    end_time = st.time_input("เวลาสิ้นสุด")
+        
+    # รวมเวลาเป็นช่วง
+    time = f"{start_time} - {end_time}"
 
     if st.button("บันทึก"):
         if name:
