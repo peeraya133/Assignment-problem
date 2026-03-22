@@ -71,6 +71,7 @@ elif menu == "เพิ่มการบ้าน":
                 st.session_state.homeworks[subject].append({
                     "task": task,
                     "due": due,
+                    "detail": detail,
                     "status": "ยังไม่เสร็จ"
                 })
                 st.success("เพิ่มการบ้านเรียบร้อย")
