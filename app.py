@@ -188,7 +188,7 @@ elif menu == "แสดงทั้งหมด":
         st.write("วัน:", sub["day"], "| เวลา:", sub["time"])
 
         for hw in st.session_state.homeworks[name]:
-        st.write(f"- {hw['task']} | {hw['due']} | {hw['status']}")
-        
-        if hw["detail"]:
-            st.write(f"   📌 {hw['detail']}")
+            st.write(f"- {hw['task']} | {hw['due']} | {hw['status']}")
+            
+            if hw["detail"]:
+                st.write(f"   📌 {hw['detail']}")
