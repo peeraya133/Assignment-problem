@@ -53,7 +53,18 @@ elif menu == "เพิ่มการบ้าน":
     if st.session_state.subjects:
         subject = st.selectbox("เลือกวิชา", list(st.session_state.subjects.keys()))
         task = st.text_input("ชื่อการบ้าน")
-        due = st.text_input("กำหนดส่ง")
+
+        # 📅 เลือกวันที่
+        due_date = st.date_input("กำหนดส่ง (วันที่)")
+        
+        # ⏰ เลือกเวลา
+        due_time = st.time_input("กำหนดส่ง (เวลา)")
+        
+        # 📝 รายละเอียด (ไม่กรอกก็ได้)
+        detail = st.text_area("รายละเอียด (ไม่จำเป็น)", "")
+        
+        # รวมวันที่ + เวลา
+        due = f"{due_date} {due_time}"
 
         if st.button("เพิ่ม"):
             if task:
