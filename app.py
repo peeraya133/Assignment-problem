@@ -1,194 +1,158 @@
 import streamlit as st
+import datetime
 
-# ====== เก็บข้อมูล ======
+# ================== Linked List ==================
+class HomeworkNode:
+    def __init__(self, task, due, detail):
+        self.task = task
+        self.due = due
+        self.detail = detail
+        self.status = "ยังไม่เสร็จ"
+        self.next = None
+
+class HomeworkList:
+    def __init__(self):
+        self.head = None
+
+    def add(self, task, due, detail):
+        new_node = HomeworkNode(task, due, detail)
+        if not self.head:
+            self.head = new_node
+        else:
+            temp = self.head
+            while temp.next:
+                temp = temp.next
+            temp.next = new_node
+
+    def to_list(self):
+        temp = self.head
+        result = []
+        while temp:
+            result.append(temp)
+            temp = temp.next
+        return result
+
+
+# ================== Tree ==================
+class TreeNode:
+    def __init__(self, name, data):
+        self.name = name
+        self.data = data
+        self.left = None
+        self.right = None
+
+def insert(root, name, data):
+    if root is None:
+        return TreeNode(name, data)
+    if name < root.name:
+        root.left = insert(root.left, name, data)
+    else:
+        root.right = insert(root.right, name, data)
+    return root
+
+def search(root, name):
+    if root is None or root.name == name:
+        return root
+    if name < root.name:
+        return search(root.left, name)
+    return search(root.right, name)
+
+
+# ================== Session ==================
 if "subjects" not in st.session_state:
-    st.session_state.subjects = {}
+    st.session_state.subjects = []  # Array
 
-if "homeworks" not in st.session_state:
-    st.session_state.homeworks = {}
+if "tree" not in st.session_state:
+    st.session_state.tree = None
 
-st.set_page_config(page_title="Study Planner", layout="centered")
-st.title("📚 Study Planner System")
+st.title("📚 Study Planner (Array + LinkedList + Tree)")
 
-# ====== เมนู ======
 menu = st.sidebar.selectbox(
     "เมนู",
-    ["เพิ่มวิชา", "เพิ่มการบ้าน", "แก้ไขวิชา", "แก้ไขการบ้าน", "ลบวิชา", "ค้นหาวิชา", "แสดงทั้งหมด"]
+    ["เพิ่มวิชา", "เพิ่มการบ้าน", "ค้นหา", "แสดงทั้งหมด"]
 )
 
 # ================== เพิ่มวิชา ==================
 if menu == "เพิ่มวิชา":
     st.header("➕ เพิ่มวิชา")
 
-    code = st.text_input("รหัสวิชา")
     name = st.text_input("ชื่อวิชา")
+    code = st.text_input("รหัสวิชา")
     teacher = st.text_input("อาจารย์")
-    # เลือกวัน
-    day = st.selectbox("วันเรียน", ["จันทร์", "อังคาร", "พุธ", "พฤหัส", "ศุกร์", "เสาร์", "อาทิตย์"])
-        
-    # เลือกเวลาเริ่ม - สิ้นสุด
-    start_time = st.time_input("เวลาเริ่ม")
-    end_time = st.time_input("เวลาสิ้นสุด")
-        
-    # รวมเวลาเป็นช่วง
-    time = f"{start_time} - {end_time}"
+    day = st.selectbox("วัน", ["จันทร์","อังคาร","พุธ","พฤหัส","ศุกร์"])
+    start = st.time_input("เวลาเริ่ม", datetime.time(9,0))
+    end = st.time_input("เวลาสิ้นสุด", datetime.time(10,0))
 
-    if st.button("บันทึก"):
-        if name:
-            st.session_state.subjects[name] = {
-                "code": code,
-                "teacher": teacher,
-                "day": day,
-                "time": time
-            }
-            st.session_state.homeworks[name] = []
-            st.success("เพิ่มวิชาเรียบร้อย")
-        else:
-            st.warning("กรอกชื่อวิชา")
+    if st.button("เพิ่มวิชา"):
+        subject = {
+            "name": name,
+            "code": code,
+            "teacher": teacher,
+            "day": day,
+            "time": f"{start} - {end}",
+            "hw": HomeworkList()
+        }
+
+        st.session_state.subjects.append(subject)  # Array
+        st.session_state.tree = insert(st.session_state.tree, name, subject)  # Tree
+
+        st.success("เพิ่มวิชาแล้ว")
+
 
 # ================== เพิ่มการบ้าน ==================
 elif menu == "เพิ่มการบ้าน":
     st.header("📝 เพิ่มการบ้าน")
 
-    if st.session_state.subjects:
-        subject = st.selectbox("เลือกวิชา", list(st.session_state.subjects.keys()))
-        task = st.text_input("ชื่อการบ้าน")
+    names = [s["name"] for s in st.session_state.subjects]
 
-        # 📅 เลือกวันที่
-        due_date = st.date_input("กำหนดส่ง (วันที่)")
-        
-        # ⏰ เลือกเวลา
-        due_time = st.time_input("กำหนดส่ง (เวลา)")
-        
-        # 📝 รายละเอียด (ไม่กรอกก็ได้)
-        detail = st.text_area("รายละเอียด (ไม่จำเป็น)", "")
-        
-        # รวมวันที่ + เวลา
-        due = f"{due_date} {due_time}"
+    if names:
+        subject_name = st.selectbox("เลือกวิชา", names)
+        task = st.text_input("ชื่อการบ้าน")
+        date = st.date_input("วันที่")
+        time = st.time_input("เวลา")
+        detail = st.text_area("รายละเอียด (ไม่บังคับ)")
 
         if st.button("เพิ่ม"):
-            if task:
-                st.session_state.homeworks[subject].append({
-                    "task": task,
-                    "due": due,
-                    "detail": detail,
-                    "status": "ยังไม่เสร็จ"
-                })
-                st.success("เพิ่มการบ้านเรียบร้อย")
-            else:
-                st.warning("กรอกชื่อการบ้าน")
+            node = search(st.session_state.tree, subject_name)
+            if node:
+                node.data["hw"].add(task, f"{date} {time}", detail)
+                st.success("เพิ่มการบ้านแล้ว")
     else:
         st.warning("ยังไม่มีวิชา")
 
-# ================== แก้ไขวิชา ==================
-elif menu == "แก้ไขวิชา":
-    st.header("✏️ แก้ไขวิชา")
 
-    if st.session_state.subjects:
-        subject = st.selectbox("เลือกวิชา", list(st.session_state.subjects.keys()))
-        data = st.session_state.subjects[subject]
-
-        new_name = st.text_input("ชื่อวิชาใหม่", value=subject)
-        code = st.text_input("รหัสวิชา", value=data["code"])
-        teacher = st.text_input("อาจารย์", value=data["teacher"])
-        # เลือกวัน
-        day = st.selectbox("วันเรียน", ["จันทร์", "อังคาร", "พุธ", "พฤหัส", "ศุกร์", "เสาร์", "อาทิตย์"])
-        
-        # เลือกเวลาเริ่ม - สิ้นสุด
-        start_time = st.time_input("เวลาเริ่ม")
-        end_time = st.time_input("เวลาสิ้นสุด")
-        
-        # รวมเวลาเป็นช่วง
-        time = f"{start_time} - {end_time}"
-
-        if st.button("บันทึกการแก้ไข"):
-            # ถ้าเปลี่ยนชื่อวิชา ต้องย้าย key
-            if new_name != subject:
-                st.session_state.subjects[new_name] = st.session_state.subjects.pop(subject)
-                st.session_state.homeworks[new_name] = st.session_state.homeworks.pop(subject)
-                subject = new_name
-
-            st.session_state.subjects[subject] = {
-                "code": code,
-                "teacher": teacher,
-                "day": day,
-                "time": time
-            }
-
-            st.success("แก้ไขเรียบร้อย")
-    else:
-        st.warning("ยังไม่มีวิชา")
-
-# ================== แก้ไขการบ้าน ==================
-elif menu == "แก้ไขการบ้าน":
-    st.header("✔ อัปเดตการบ้าน")
-
-    if st.session_state.subjects:
-        subject = st.selectbox("เลือกวิชา", list(st.session_state.subjects.keys()))
-        hw_list = st.session_state.homeworks[subject]
-
-        if hw_list:
-            for i, hw in enumerate(hw_list):
-                col1, col2 = st.columns([3,1])
-                col1.write(f"{hw['task']} | {hw['due']} | {hw['status']}")
-
-                if col2.button("เสร็จ", key=i):
-                    hw["status"] = "เสร็จแล้ว"
-                    st.success("อัปเดตแล้ว")
-        else:
-            st.info("ยังไม่มีการบ้าน")
-    else:
-        st.warning("ยังไม่มีวิชา")
-
-# ================== ลบวิชา ==================
-elif menu == "ลบวิชา":
-    st.header("🗑 ลบวิชา")
-
-    if st.session_state.subjects:
-        subject = st.selectbox("เลือกวิชา", list(st.session_state.subjects.keys()))
-
-        if st.button("ลบ"):
-            del st.session_state.subjects[subject]
-            del st.session_state.homeworks[subject]
-            st.success("ลบเรียบร้อย")
-    else:
-        st.warning("ไม่มีข้อมูล")
-
-# ================== ค้นหาวิชา ==================
-elif menu == "ค้นหาวิชา":
+# ================== ค้นหา ==================
+elif menu == "ค้นหา":
     st.header("🔍 ค้นหาวิชา")
 
     name = st.text_input("ชื่อวิชา")
 
     if st.button("ค้นหา"):
-        if name in st.session_state.subjects:
-            sub = st.session_state.subjects[name]
+        node = search(st.session_state.tree, name)
 
-            st.subheader(f"📘 {name}")
-            st.write("รหัส:", sub["code"])
-            st.write("อาจารย์:", sub["teacher"])
-            st.write("วัน:", sub["day"])
-            st.write("เวลา:", sub["time"])
+        if node:
+            sub = node.data
+            st.subheader(sub["name"])
+            st.write(sub["day"], sub["time"])
 
             st.subheader("📌 การบ้าน")
-            for hw in st.session_state.homeworks[name]:
-                st.write(f"- {hw['task']} | {hw['due']} | {hw['status']}")
-                
-                if hw["detail"]:
-                    st.write(f"   📌 {hw['detail']}")
+            for hw in sub["hw"].to_list():
+                st.write(f"- {hw.task} | {hw.due} | {hw.status}")
+                if hw.detail:
+                    st.write(f"   📌 {hw.detail}")
         else:
-            st.error("ไม่พบวิชา")
+            st.error("ไม่พบ")
+
 
 # ================== แสดงทั้งหมด ==================
 elif menu == "แสดงทั้งหมด":
-    st.header("📋 ข้อมูลทั้งหมด")
+    st.header("📋 ทั้งหมด")
 
-    for name, sub in st.session_state.subjects.items():
-        st.subheader(f"📘 {name}")
-        st.write("วัน:", sub["day"], "| เวลา:", sub["time"])
+    for sub in st.session_state.subjects:
+        st.subheader(sub["name"])
+        st.write(sub["day"], sub["time"])
 
-        for hw in st.session_state.homeworks[name]:
-            st.write(f"- {hw['task']} | {hw['due']} | {hw['status']}")
-            
-            if hw["detail"]:
-                st.write(f"   📌 {hw['detail']}")
+        for hw in sub["hw"].to_list():
+            st.write(f"- {hw.task} | {hw.due} | {hw.status}")
+            if hw.detail:
+                st.write(f"   📌 {hw.detail}")
